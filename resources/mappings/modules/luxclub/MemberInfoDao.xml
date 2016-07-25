@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.footing.website.modules.luxclub.dao.MemberInfoDao">
+
+  <sql id="memberInfoColumns">
+    a.id AS "id",
+    a.member_cardno AS "memberCardno",
+    a.member_pwd AS "memberPwd",
+    a.member_level AS "memberLevel",
+    a.member_name AS "memberName",
+    a.member_mobile AS "memberMobile",
+    a.member_balance AS "memberBalance",
+    a.obligation AS "obligation",
+    a.issuing_date AS "issuingDate",
+    a.expire_date AS "expireDate",
+    a.state AS "state",
+    a.create_by AS "createBy.id",
+    a.create_date AS "createDate",
+    a.update_by AS "updateBy.id",
+    a.update_date AS "updateDate",
+    a.remarks AS "remarks",
+    a.del_flag AS "delFlag",
+    a.batch_id AS "batchId",
+    a.wallet_balance AS "walletBalance",
+    a.wallet_prepay AS "walletPrepay",
+    a.wallet_profit AS "walletProfit",
+    a.wallet_last_profit AS "walletLastProfit",
+    a.term_type AS "termType"
+  </sql>
+
+  <sql id="memberInfoJoins">
+  </sql>
+
+  <select id="get" resultType="MemberInfo">
+    SELECT
+    <include refid="memberInfoColumns" />
+    FROM luxclub_member_info a
+    <include refid="memberInfoJoins" />
+    WHERE a.id = #{id}
+  </select>
+
+  <select id="getById" resultType="MemberInfo">
+    SELECT
+    <include refid="memberInfoColumns" />
+    FROM luxclub_member_info a
+    <include refid="memberInfoJoins" />
+    WHERE a.id = #{id} FOR UPDATE
+  </select>
+
+  <select id="findList" resultType="MemberInfo">
+    SELECT
+    <include refid="memberInfoColumns" />
+    FROM luxclub_member_info a
+    <include refid="memberInfoJoins" />
+    <where>
+      a.del_flag = #{DEL_FLAG_NORMAL}
+      <if test="beginIssuingDate != null and beginIssuingDate != ''">
+        <![CDATA[AND a.issuing_date >= #{beginIssuingDate}]]>
+      </if>
+      <if test="endIssuingDate != null and endIssuingDate != ''">
+        <![CDATA[AND a.issuing_date <= #{endIssuingDate}]]>
+      </if>
+      <if test="batchId != null">
+        AND a.batch_id = #{batchId}
+      </if>
+      <if test="memberCardno != null and memberCardno != ''">
+        AND a.member_cardno like CONCAT('%', #{memberCardno}, '%')
+      </if>
+      <if test="memberLevel != null">
+        AND a.member_level = #{memberLevel}
+      </if>
+      <if test="memberName != null and memberName != ''">
+        AND a.member_name like CONCAT('%', #{memberName}, '%')
+      </if>
+      <if test="memberMobile != null and memberMobile != ''">
+        AND a.member_mobile like CONCAT('%', #{memberMobile}, '%')
+      </if>
+      <if test="state != null">
+        AND a.state = #{state}
+      </if>
+    </where>
+    <choose>
+      <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+        ORDER BY ${page.orderBy}
+      </when>
+      <otherwise>
+        ORDER BY a.update_date DESC
+      </otherwise>
+    </choose>
+  </select>
+
+  <select id="findAllList" resultType="MemberInfo">
+    SELECT
+    <include refid="memberInfoColumns" />
+    FROM luxclub_member_info a
+    <include refid="memberInfoJoins" />
+    <where>
+      a.del_flag = #{DEL_FLAG_NORMAL}
+    </where>
+    <choose>
+      <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+        ORDER BY ${page.orderBy}
+      </when>
+      <otherwise>
+        ORDER BY a.update_date DESC
+      </otherwise>
+    </choose>
+  </select>
+
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO luxclub_member_info(
+    member_cardno,
+    member_pwd,
+    member_level,
+    member_name,
+    member_mobile,
+    member_balance,
+    obligation,
+    issuing_date,
+    expire_date,
+    state,
+    batch_id,
+    create_by,
+    create_date,
+    update_by,
+    update_date,
+    remarks,
+    del_flag,
+    wallet_balance,
+    wallet_prepay,
+    wallet_profit,
+    wallet_last_profit
+    ) VALUES (
+    #{memberCardno},
+    #{memberPwd},
+    #{memberLevel},
+    #{memberName},
+    #{memberMobile},
+    #{memberBalance},
+    #{obligation},
+    #{issuingDate},
+    #{expireDate},
+    #{state},
+    #{batchId},
+    #{createBy.id},
+    #{createDate},
+    #{updateBy.id},
+    #{updateDate},
+    #{remarks},
+    #{delFlag},
+    #{walletBalance},
+    #{walletPrepay},
+    #{walletProfit},
+    #{walletLastProfit}
+    )
+  </insert>
+
+  <update id="update">
+    UPDATE luxclub_member_info SET
+    member_cardno = #{memberCardno},
+    member_level = #{memberLevel},
+    member_name = #{memberName},
+    member_mobile = #{memberMobile},
+    member_balance = #{memberBalance},
+    obligation = #{obligation},
+    issuing_date = #{issuingDate},
+    expire_date = #{expireDate},
+    state = #{state},
+    update_by = #{updateBy.id},
+    update_date = #{updateDate},
+    remarks = #{remarks},
+    wallet_balance = #{walletBalance},
+    wallet_prepay = #{walletPrepay},
+    wallet_profit = #{walletProfit},
+    wallet_last_profit = #{walletLastProfit}
+    WHERE id = #{id}
+  </update>
+
+  <update id="delete">
+    UPDATE luxclub_member_info SET
+    del_flag = #{DEL_FLAG_DELETE}
+    WHERE id = #{id}
+  </update>
+  
+  <update id="updateMemberState">
+    UPDATE luxclub_member_info SET
+    state = #{state},
+    term_type =#{termType},
+    update_by = #{updateBy.id},
+    <if test="memberMobile != null and memberMobile != ''">
+    member_mobile = #{memberMobile},
+    </if>
+    update_date = #{updateDate}
+    WHERE id = #{id}
+  </update>
+
+  <insert id="batchInsert" parameterType="java.util.List">
+    INSERT INTO luxclub_member_info(
+    member_cardno,
+    member_pwd,
+    member_level,
+    member_balance,
+    obligation,
+    issuing_date,
+    expire_date,
+    state,
+    batch_id,
+    create_by,
+    create_date,
+    update_by,
+    update_date,
+    remarks,
+    del_flag,
+    wallet_balance,
+    wallet_prepay,
+    wallet_profit,
+    wallet_last_profit
+    ) VALUES
+    <foreach collection="list" item="item" separator=",">(
+      #{item.memberCardno},
+      #{item.memberPwd},
+      #{item.memberLevel},
+      #{item.memberBalance},
+      #{item.obligation},
+      #{item.issuingDate},
+      #{item.expireDate},
+      #{item.state},
+      #{item.batchId},
+      #{item.createBy.id},
+      #{item.createDate},
+      #{item.updateBy.id},
+      #{item.updateDate},
+      #{item.remarks},
+      #{item.delFlag},      
+      #{item.walletBalance},
+      #{item.walletPrepay},
+      #{item.walletProfit},
+      #{item.walletLastProfit}
+      )
+    </foreach>
+  </insert>
+
+  <!-- 更新会员卡余额 -->
+  <update id="changeBalance">
+    UPDATE luxclub_member_info SET
+    member_balance = member_balance + #{amount},
+    update_by = #{updateBy.id},
+    update_date = #{updateDate}
+    WHERE id = #{id}
+  </update>
+
+  <!-- 更新零钱包余额 -->
+  <update id="changeWallet">
+    UPDATE luxclub_member_info SET
+    wallet_balance = wallet_balance + #{amount},
+    update_by = #{updateBy.id},
+    update_date = #{updateDate}
+    WHERE id = #{id}
+  </update>
+
+  <!-- 锁行记录 -->
+  <select id="getMemberInfo" resultType="MemberInfo">
+    SELECT
+    <include refid="memberInfoColumns" />
+    FROM luxclub_member_info a
+    <include refid="memberInfoJoins" />
+    WHERE a.id = #{id}
+    for update
+  </select>
+  
+  <!-- 查询会员 -->
+  <select id="queryMemberInfoByCardno" resultType="MemberInfo">
+    SELECT
+    <include refid="memberInfoColumns" />
+    FROM luxclub_member_info a
+    <include refid="memberInfoJoins" />
+    WHERE a.member_cardno = #{memberCardno}
+    <if test="state != null">
+        AND a.state = #{state}
+    </if>
+  </select>
+
+  <!-- 修改密码 -->
+  <update id="updatePassword" parameterType="Map">
+    UPDATE luxclub_member_info SET
+    member_pwd = #{password}
+    WHERE id = #{id}
+  </update>
+  
+  <!-- 根据批次ID获取会员信息列表 -->
+  <select id="findListByBatchId" resultType="MemberInfo">
+    SELECT
+    <include refid="memberInfoColumns" />
+    FROM luxclub_member_info a
+    <include refid="memberInfoJoins" />
+    WHERE a.batch_id = #{batchId}
+  </select>
+  <!-- 获取全部会员卡的总数量 -->
+  <select id="countAllMemberCardno" resultType="Integer">
+    SELECT count(a.id) FROM luxclub_member_info a where a.del_flag = 0
+  </select>
+  
+  <select id="findCardnoListByPage" resultType="String">
+    SELECT member_cardno
+    FROM luxclub_member_info a
+    WHERE a.del_flag = 0
+    limit #{startNumber},#{endNumber}
+  </select>
+  <!--会员的零钱按照年化3.68%进行计息 -->
+  <select id="findListbyInterestAccrual" resultType="MemberInfo"  >
+    SELECT
+    <include refid="memberInfoColumns" />
+    
+    FROM luxclub_member_info a
+    
+    where  a.state=1 and a.wallet_balance>0
+     
+  </select>
+</mapper>

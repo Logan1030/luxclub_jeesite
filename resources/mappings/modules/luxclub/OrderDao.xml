@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.footing.website.modules.luxclub.dao.OrderDao">
+    
+	<sql id="orderColumns">
+		a.id AS "id",
+		a.order_code AS "orderCode",
+		a.reserve_date AS "reserveDate",
+		a.reserve_number AS "reserveNumber",
+		a.reserve_cost AS "reserveCost",
+		a.reserve_require AS "reserveRequire",
+		a.reserve_site_id AS "reserveSiteId",
+		a.state AS "state",
+		a.consumer_money AS "consumerMoney",
+		a.consumer_vouchers AS "consumerVouchers",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.member_cardno AS "memberCardno",
+		a.contact_mobile AS "contactMobile",
+		a.send_date AS "sendDate",
+		a.device_id AS "deviceId",
+		a.business_id AS "businessId",
+		a.real_date AS "realDate",
+		a.real_number AS "realNumber",
+		a.real_require AS "realRequire",
+		a.wallet_amount as walletAmount,
+		a.wallet_voucher as walletVoucher,
+		a.wallet_remarks as walletRemarks,
+		b.name as businessName
+	</sql>
+	
+	<sql id="orderJoins">
+	   left join sys_user b 
+         on b.user_type=4
+         and a.business_id=b.id
+	</sql>
+    
+	<select id="get" resultType="Order">
+		SELECT 
+			<include refid="orderColumns"/>
+		FROM luxclub_order a
+		<include refid="orderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	<select id="findPagebyStatistics" resultType="Order">
+		    select 
+			a.site_name as siteName,
+			sum(b.fee_money) as consumerMoney,
+			d.`name` as businessName 
+			from luxclub_site_info a
+			inner join luxclub_fee_record b on a.id=b.site_id
+			inner join luxclub_order c on b.order_code=c.order_code
+			left join sys_user d on c.business_id=d.id
+		  <where> 
+		    c.state=4 or c.state=6
+			and d.user_type=4
+			<if test="businessId != null and businessId != ''">
+				AND c.business_id = #{businessId}
+			</if>
+			<if test="reserveSiteId != null and reserveSiteId != ''">
+				AND a.id = #{reserveSiteId}
+			</if>
+			<if test="beginReserveDate != null and endReserveDate != ''">
+                <![CDATA[ AND c.create_date >= #{beginReserveDate}  ]]>
+            </if>
+            <if test="endReserveDate != null and endReserveDate != ''">
+                <![CDATA[  AND c.create_date <= ADDDATE(#{endReserveDate},INTERVAL 1 DAY) ]]>
+            </if>
+		  </where>
+          group by a.id,d.id
+         
+		 <choose>
+		    
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>  
+                order by consumerMoney desc
+            </otherwise>  
+		 </choose>
+	</select>
+	<select id="findList" resultType="Order">
+		SELECT 
+			<include refid="orderColumns"/>
+		FROM luxclub_order a
+		<include refid="orderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="orderCode != null and orderCode != ''">
+				AND a.order_code = #{orderCode}
+			</if>
+			<if test="beginReserveDate != null and endReserveDate != ''">
+                <![CDATA[ AND a.create_date >= #{beginReserveDate}  ]]>
+            </if>
+            <if test="endReserveDate != null and endReserveDate != ''">
+                <![CDATA[  AND a.create_date <= ADDDATE(#{endReserveDate},INTERVAL 1 DAY) ]]>
+            </if>
+			<if test="reserveNumber != null and reserveNumber != ''">
+				AND a.reserve_number = #{reserveNumber}
+			</if>
+			<if test="reserveSiteId != null and reserveSiteId != ''">
+				AND a.reserve_site_id = #{reserveSiteId}
+			</if>
+			<if test="state != null and state != ''">
+				AND a.state = #{state}
+			</if>
+			<if test="consumerMoney != null and consumerMoney != ''">
+				AND a.consumer_money = #{consumerMoney}
+			</if>
+			<if test="memberCardno != null and memberCardno != ''">
+				AND a.member_cardno = #{memberCardno}
+			</if>
+			<if test="contactMobile != null and contactMobile != ''">
+				AND a.contact_mobile LIKE 
+					<if test="dbName == 'oracle'">'%'||#{contactMobile}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{contactMobile}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{contactMobile},'%')</if>
+			</if>
+			<if test="businessId != null and businessId != ''">
+				AND a.business_id = #{businessId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Order">
+		SELECT 
+			<include refid="orderColumns"/>
+		FROM luxclub_order a
+		<include refid="orderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO luxclub_order(
+			order_code,
+			reserve_date,
+			reserve_number,
+			reserve_cost,
+			reserve_require,
+			reserve_site_id,
+			state,
+			consumer_money,
+			consumer_vouchers,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			member_cardno,
+			contact_mobile,
+			send_date,
+			device_id,
+			business_id,
+			real_date,
+			real_number,
+			real_require,
+			wallet_amount,
+		    wallet_voucher,
+		    wallet_remarks
+		) VALUES (
+			#{orderCode},
+			#{reserveDate},
+			#{reserveNumber},
+			#{reserveCost},
+			#{reserveRequire},
+			#{reserveSiteId},
+			#{state},
+			#{consumerMoney},
+			#{consumerVouchers},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{memberCardno},
+			#{contactMobile},
+			#{sendDate},
+			#{deviceId},
+			#{businessId},
+			#{realDate},
+			#{realNumber},
+			#{realRequire},
+			#{walletAmount},
+		    #{walletVoucher},
+		    #{walletRemarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE luxclub_order SET 	
+			reserve_date = #{reserveDate},
+			reserve_number = #{reserveNumber},
+			reserve_cost = #{reserveCost},
+			reserve_require = #{reserveRequire},
+			reserve_site_id = #{reserveSiteId},
+			state = #{state},
+			consumer_money = #{consumerMoney},
+			consumer_vouchers = #{consumerVouchers},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			member_cardno = #{memberCardno},
+			contact_mobile = #{contactMobile},
+			send_date = #{sendDate},
+			device_id = #{deviceId},
+			business_id = #{businessId},
+			real_date = #{realDate},
+			real_number = #{realNumber},
+			real_require = #{realRequire},
+			wallet_amount = #{walletAmount},
+		    wallet_voucher = #{walletVoucher},
+		    wallet_remarks = #{walletRemarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE luxclub_order SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<select id="countOrder" resultType="java.lang.Integer">
+		SELECT 
+		 count(*)
+		FROM luxclub_order
+	</select>
+	<!-- 查询20分钟后订单未处理的订单 -->
+	<select id="findBysendOrderQuertz" resultType="Order">
+		SELECT 
+			a.id AS "id",
+			a.order_code AS "orderCode",
+			a.state AS "state",
+			a.consumer_money AS "consumerMoney",
+			a.consumer_vouchers AS "consumerVouchers",
+			a.remarks AS "remarks",
+			a.member_cardno AS "memberCardno",
+			a.contact_mobile AS "contactMobile",
+			a.business_id AS "businessId"
+		FROM luxclub_order a
+		where a.state=1 and  a.business_id is not null 
+		and TIMESTAMPDIFF(SECOND,a.send_date,NOW())>1200
+	</select>
+	<!-- 20分钟后订单状态重新置为预定状态 -->	
+	<update id="sendOrderQuartz">
+	   update  luxclub_order set state=0, business_id=null, send_date=null ,
+	   remarks='原因:20分钟未处理此订单,重新分配' where state=1 and TIMESTAMPDIFF(SECOND,send_date,NOW())>1200
+	</update>
+	<!--锁行记录  -->
+	<select id="lockOrderById" resultType="Order">
+		SELECT 
+			a.id AS "id",
+			a.order_code AS "orderCode",
+			a.state AS "state",
+			a.consumer_money AS "consumerMoney",
+			a.consumer_vouchers AS "consumerVouchers",
+			a.remarks AS "remarks",
+			a.member_cardno AS "memberCardno",
+			a.contact_mobile AS "contactMobile",
+			a.business_id AS "businessId"
+		FROM luxclub_order a
+		WHERE a.id = #{id}
+		for update
+	</select>
+	<!-- 已结账金额 -->
+	<select id="queryPayAmount" resultType="java.math.BigDecimal" parameterType="com.footing.website.modules.luxclub.entity.OrderCnd">
+		select IFNULL(SUM(consumer_money),0)as total  from luxclub_order 
+		<where>
+		     state=6
+		    <if test="beginReserveDate != null and endReserveDate != ''">
+                <![CDATA[ AND create_date >= #{beginReserveDate}  ]]>
+            </if>
+            <if test="endReserveDate != null and endReserveDate != ''">
+                <![CDATA[  AND create_date <= ADDDATE(#{endReserveDate},INTERVAL 1 DAY) ]]>
+            </if>
+		</where>
+	</select>
+	<!-- 未结账金额 -->
+	<select id="queryUnpayAmount" resultType="java.math.BigDecimal" parameterType="com.footing.website.modules.luxclub.entity.OrderCnd">
+		select IFNULL(SUM(consumer_money),0)as noToal  from luxclub_order  
+		<where>
+		     state=5
+		    <if test="beginReserveDate != null and endReserveDate != ''">
+                <![CDATA[ AND create_date >= #{beginReserveDate}  ]]>
+            </if>
+            <if test="endReserveDate != null and endReserveDate != ''">
+                <![CDATA[  AND create_date <= ADDDATE(#{endReserveDate},INTERVAL 1 DAY) ]]>
+            </if>
+		</where>
+	</select>
+	<!-- 查询订单详细 用户端-->
+	<select id="queryOrderDetailById" resultType="com.footing.website.modules.luxclub.api.response.OrderVo">
+	   select 
+			a.id as orderId,
+			a.order_code as orderCode,
+			a.state as orderState,
+			b.id as siteId,
+			b.site_name as siteName,
+			b.site_addr as siteAddr,
+			a.create_date as createDate,
+			a.reserve_date as realDate,
+			a.consumer_money as consumerMoney,
+			a.reserve_number as  reserveNumber,
+			a.reserve_require as cancelReason,
+			a.contact_mobile as contactMobile,
+			a.member_cardno as cardno,
+			a.pay_way as payModel,
+			a.real_require as otherRequire,
+		    a.wallet_amount as walletAmount,
+		    a.wallet_Remarks as walletRemarks,
+		    concat(IFNULL(a.consumer_vouchers,''),IFNULL(a.wallet_voucher,'')) as voucher,
+            c.mobile as managerMobile
+	  from  sys_user c 
+      right join luxclub_order a
+      on c.id=a.business_id
+	left join luxclub_site_info b
+	on a.reserve_site_id=b.id
+	WHERE a.id = #{id}
+	</select>
+	<!-- 订单分页列表 用户端-->
+	<select id="queryOrderPageList" resultType="com.footing.website.modules.luxclub.api.response.OrderVo"  >
+	   select 
+			a.id as orderId,
+			a.order_code as orderCode,
+			a.state as orderState,
+			a.reserve_site_id as siteId,
+			b.site_name as siteName,
+			b.site_addr as siteAddr,
+			a.reserve_date as createDate,
+		    b.shop_photo as siteImageUrl,
+            a.remarks  
+			from luxclub_order a
+			left join luxclub_site_info b
+			on a.reserve_site_id=b.id
+			 
+			<where>
+				a.member_cardno=#{cardno}
+				<if test="state != null and state == 1">
+					  AND a.state in (0,1)
+				</if>
+				<if test="state != null and state == 2">
+					  AND a.state in (2,5)
+				</if>
+				<if test="state != null and state == 3">
+					  AND a.state in (6)
+				</if> 
+				<if test="state != null and state == 4">
+					  AND a.state in (3)
+				</if>   
+		   </where>
+			order by a.reserve_date  asc
+            limit #{pageSize},#{pageNumber}
+	</select>
+	<!-- 查询订单详细 客户经理端-->
+	<select id="searchOrderDetailById" resultType="com.footing.website.modules.luxclub.api.response.OrderManagerVo">
+	   select 
+			a.id as orderId,
+			a.order_code as orderCode,
+			a.state as orderState,
+			b.id as siteId,
+			b.site_name as siteName,
+			b.site_addr as siteAddr,
+			a.create_date as createDate,
+			a.reserve_date as realDate,
+			a.consumer_money as consumerMoney,
+			a.reserve_number as  reserveNumberType,
+			a.contact_mobile as contactMobile,
+		    a.consumer_vouchers as voucher,
+		    a.reserve_require as cancelReason,
+		    a.real_require as otherRequire,
+		    a.wallet_Amount as walletAmount,
+		    a.wallet_Remarks as walletRemarks,
+		    a.wallet_voucher as walletVoucher,
+		    a.member_cardno as cardno
+		from luxclub_order a
+		left join luxclub_site_info b  
+		on a.reserve_site_id=b.id
+	    WHERE a.id = #{id}
+           
+	</select>
+	<!-- 订单分页列表 客户经理端-->
+	<select id="searchOrderPageList" resultType="com.footing.website.modules.luxclub.api.response.OrderManagerVo"  >
+		   select 
+				a.id as orderId,
+				a.order_code as orderCode,
+				a.state as orderState,
+				a.reserve_site_id as siteId,
+				b.site_name as siteName,
+				b.site_addr as siteAddr,
+				a.reserve_date as createDate,
+			    b.shop_photo as siteImageUrl,
+	            a.remarks  
+			from luxclub_order a
+			left join luxclub_site_info b  
+			on a.reserve_site_id=b.id
+		<where>
+		  a.business_id is not null and  a.business_id=#{bid}
+		  <if test="state != null and state == 1">
+			  AND a.state = 1
+		  </if>
+		  <if test="state != null and state == 2">
+			  AND a.state in (2,5)
+		  </if>
+		  <if test="state != null and state == 3">
+			  AND a.state in (3,6)
+		  </if>
+		</where>
+		order by a.reserve_date  asc
+           limit #{pageSize},#{pageNumber}
+	</select>
+
+	<!-- 根据卡号获取未完成的订单数量 -->
+	<select id="countNotFinishOrderNumber" parameterType="Map" resultType="Integer" >
+	   select count(a.id) from luxclub_order a
+	   where a.member_cardno=#{cardno} and a.state in(${state}) and a.del_flag = 0 
+	</select>
+	
+	<!-- 根据状态查询订单 -->
+	<select id="getOrderBystatus" resultType="Order">
+	   
+		SELECT 
+			<include refid="orderColumns"/>
+		FROM luxclub_order a
+		<include refid="orderJoins"/>
+		<where>
+	      a.id = #{id}
+		  <if test="state != null and state != '' and state !=3">
+				AND a.state in (#{state})
+		  </if>
+		  <if test="state != null and state != '' and state ==3">
+				AND a.state in (1,2)
+		  </if>
+		</where>
+		 
+	</select>
+	
+</mapper>

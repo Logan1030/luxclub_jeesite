@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.footing.website.modules.luxclub.dao.OrderHisDao">
+    
+	<sql id="orderHisColumns">
+		a.id AS "id",
+		a.order_code AS "orderCode",
+		a.reserve_date AS "reserveDate",
+		a.reserve_number AS "reserveNumber",
+		a.reserve_cost AS "reserveCost",
+		a.reserve_require AS "reserveRequire",
+		a.reserve_site_id AS "reserveSiteId",
+		a.state AS "state",
+		a.consumer_money AS "consumerMoney",
+		a.consumer_vouchers AS "consumerVouchers",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.member_cardno AS "memberCardno",
+		a.contact_mobile AS "contactMobile",
+		a.send_date AS "sendDate",
+		a.device_id AS "deviceId",
+		a.business_id AS "businessId",
+		a.real_date AS "realDate",
+		a.real_number AS "realNumber",
+		a.real_require AS "realRequire",
+		b.name as businessName
+	</sql>
+	
+	<sql id="orderHisJoins">
+	  left join sys_user b 
+         on b.user_type=4
+         and a.business_id=b.id
+	</sql>
+    
+	<select id="get" resultType="OrderHis">
+		SELECT 
+			<include refid="orderHisColumns"/>
+		FROM luxclub_order_his a
+		<include refid="orderHisJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OrderHis">
+		SELECT 
+			<include refid="orderHisColumns"/>
+		FROM luxclub_order_his a
+		<include refid="orderHisJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="orderCode != null and orderCode != ''">
+				AND a.order_code LIKE 
+					<if test="dbName == 'oracle'">'%'||#{orderCode}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{orderCode}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{orderCode},'%')</if>
+			</if>
+			<if test="beginReserveDate != null and endReserveDate != ''">
+                <![CDATA[ AND a.create_date >= #{beginReserveDate}  ]]>
+            </if>
+            <if test="endReserveDate != null and endReserveDate != ''">
+                <![CDATA[  AND a.create_date <= ADDDATE(#{endReserveDate},INTERVAL 1 DAY) ]]>
+            </if>
+			<if test="reserveNumber != null and reserveNumber != ''">
+				AND a.reserve_number = #{reserveNumber}
+			</if>
+			<if test="reserveCost != null and reserveCost != ''">
+				AND a.reserve_cost = #{reserveCost}
+			</if>
+			<if test="state != null and state != ''">
+				AND a.state = #{state}
+			</if>
+			<if test="consumerMoney != null and consumerMoney != ''">
+				AND a.consumer_money = #{consumerMoney}
+			</if>
+			<if test="memberCardno != null and memberCardno != ''">
+				AND a.member_cardno = #{memberCardno}
+			</if>
+			<if test="contactMobile != null and contactMobile != ''">
+				AND a.contact_mobile LIKE 
+					<if test="dbName == 'oracle'">'%'||#{contactMobile}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{contactMobile}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{contactMobile},'%')</if>
+			</if>
+			<if test="businessId != null and businessId != ''">
+				AND a.business_id = #{businessId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OrderHis">
+		SELECT 
+			<include refid="orderHisColumns"/>
+		FROM luxclub_order_his a
+		<include refid="orderHisJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO luxclub_order_his(
+			order_code,
+			reserve_date,
+			reserve_number,
+			reserve_cost,
+			reserve_require,
+			reserve_site_id,
+			state,
+			consumer_money,
+			consumer_vouchers,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			member_cardno,
+			contact_mobile,
+			send_date,
+			device_id,
+			business_id,
+			real_date,
+			real_number,
+			real_require
+		) VALUES (
+			#{orderCode},
+			#{reserveDate},
+			#{reserveNumber},
+			#{reserveCost},
+			#{reserveRequire},
+			#{reserveSiteId},
+			#{state},
+			#{consumerMoney},
+			#{consumerVouchers},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{memberCardno},
+			#{contactMobile},
+			#{sendDate},
+			#{deviceId},
+			#{businessId},
+			#{realDate},
+			#{realNumber},
+			#{realRequire}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE luxclub_order_his SET 	
+			order_code = #{orderCode},
+			reserve_date = #{reserveDate},
+			reserve_number = #{reserveNumber},
+			reserve_cost = #{reserveCost},
+			reserve_require = #{reserveRequire},
+			reserve_site_id = #{reserveSiteId},
+			state = #{state},
+			consumer_money = #{consumerMoney},
+			consumer_vouchers = #{consumerVouchers},
+			remarks = #{remarks},
+			member_cardno = #{memberCardno},
+			contact_mobile = #{contactMobile},
+			send_date = #{sendDate},
+			device_id = #{deviceId},
+			business_id = #{businessId},
+			real_date = #{realDate},
+			real_number = #{realNumber},
+			real_require = #{realRequire}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE luxclub_order_his SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

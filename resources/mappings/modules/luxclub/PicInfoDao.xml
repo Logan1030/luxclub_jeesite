@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.footing.website.modules.luxclub.dao.PicInfoDao">
+    
+	<sql id="picInfoColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.pic_addr AS "picAddr",
+		a.business_type AS "businessType",
+		a.business_id AS "businessId"
+	</sql>
+	
+	<sql id="picInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="PicInfo">
+		SELECT 
+			<include refid="picInfoColumns"/>
+		FROM luxclub_pic_info a
+		<include refid="picInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="PicInfo">
+		SELECT 
+			<include refid="picInfoColumns"/>
+		FROM luxclub_pic_info a
+		<include refid="picInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PicInfo">
+		SELECT 
+			<include refid="picInfoColumns"/>
+		FROM luxclub_pic_info a
+		<include refid="picInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO luxclub_pic_info(
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			pic_addr,
+			business_type,
+			business_id
+		) VALUES (
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{picAddr},
+			#{businessType},
+			#{businessId}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE luxclub_pic_info SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			pic_addr = #{picAddr},
+			business_type = #{businessType},
+			business_id = #{businessId}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE luxclub_pic_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findListByBusinessId" resultType="PicInfo">
+		SELECT 
+			<include refid="picInfoColumns"/>
+		FROM luxclub_pic_info a
+		WHERE del_flag = #{DEL_FLAG_NORMAL} and a.business_id= #{businessId}
+	</select>
+</mapper>

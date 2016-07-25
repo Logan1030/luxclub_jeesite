@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.footing.website.modules.luxclub.dao.MessageNotifyDao">
+
+  <sql id="messageNotifyColumns">
+    a.id AS "id",
+    a.send_content AS "sendContent",
+    a.message_type AS "messageType",
+    a.member_phone AS "memberPhone",
+    a.member_cardno AS "memberCardno",
+    a.order_code AS "orderCode",
+    a.state AS "state",
+    a.title AS "title",
+    a.message_channel AS "messageChannel",
+    a.return_code AS "returnCode",
+    a.error_message AS "errorMessage",
+    a.receiver AS "receiver",
+    a.send_time AS "sendTime",
+    a.create_by AS "createBy.id",
+    a.create_date AS "createDate",
+    a.update_by AS "updateBy.id",
+    a.update_date AS "updateDate",
+    a.remarks AS "remarks",
+    a.del_flag AS "delFlag"
+   <!--  ,su.name AS "receiverName" -->
+  </sql>
+
+  <sql id="messageNotifyJoins">
+  <!-- left join sys_user su on su.id=a.receiver -->
+  </sql>
+
+  <select id="get" resultType="MessageNotify">
+    SELECT
+    <include refid="messageNotifyColumns" />
+    FROM luxclub_message_notify a
+    <include refid="messageNotifyJoins" />
+    WHERE a.id = #{id}
+  </select>
+
+  <select id="findList" resultType="MessageNotify">
+    SELECT
+    <include refid="messageNotifyColumns" />
+    FROM luxclub_message_notify a
+    <include refid="messageNotifyJoins" />
+    <where>
+      a.del_flag = #{DEL_FLAG_NORMAL}
+      <![CDATA[and a.create_date>=#{beginCreateDate} and a.create_date<=#{endCreateDate}]]>
+      <if test="title != null and title != ''">
+        AND a.title like concat('%',#{title},'%')
+      </if>
+      <if test="messageType != null and messageType != ''">
+        AND a.message_type = #{messageType}
+      </if>
+      <if test="messageChannel != null">
+        AND a.message_channel = #{messageChannel}
+      </if>
+      <if test="returnCode != null and returnCode != ''">
+        AND a.return_code = #{returnCode}
+      </if>
+      <if test="receiverName != null and receiverName != ''">
+        AND su.name like concat('%',#{receiverName},'%')
+      </if>
+      <if test="state != null">
+        AND a.state = #{state}
+      </if>
+    </where>
+    <choose>
+      <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+        ORDER BY ${page.orderBy}
+      </when>
+      <otherwise>
+        ORDER BY a.update_date DESC
+      </otherwise>
+    </choose>
+  </select>
+
+  <select id="findAllList" resultType="MessageNotify">
+    SELECT
+    <include refid="messageNotifyColumns" />
+    FROM luxclub_message_notify a
+    <include refid="messageNotifyJoins" />
+    <where>
+      a.del_flag = #{DEL_FLAG_NORMAL}
+    </where>
+    <choose>
+      <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+        ORDER BY ${page.orderBy}
+      </when>
+      <otherwise>
+        ORDER BY a.update_date DESC
+      </otherwise>
+    </choose>
+  </select>
+
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO luxclub_message_notify(
+    send_content,
+    message_type,
+    member_phone,
+    member_cardno,
+    order_code,
+    state,
+    title,
+    receiver,
+    message_channel,
+    create_by,
+    create_date,
+    update_by,
+    update_date,
+    remarks,
+    del_flag
+    ) VALUES (
+    #{sendContent},
+    #{messageType},
+    #{memberPhone},
+    #{memberCardno},
+    #{orderCode},
+    #{state},
+    #{title},
+    #{receiver},
+    #{messageChannel},
+    #{createBy.id},
+    #{createDate},
+    #{updateBy.id},
+    #{updateDate},
+    #{remarks},
+    #{delFlag}
+    )
+  </insert>
+
+  <update id="update">
+    UPDATE luxclub_message_notify SET
+    send_content = #{sendContent},
+    message_type = #{messageType},
+    member_phone = #{memberPhone},
+    order_code = #{orderCode},
+    state = #{state},
+    update_by = #{updateBy.id},
+    update_date = #{updateDate},
+    remarks = #{remarks}
+    WHERE id = #{id}
+  </update>
+
+  <update id="delete">
+    UPDATE luxclub_message_notify SET
+    del_flag = #{DEL_FLAG_DELETE}
+    WHERE id = #{id}
+  </update>
+  <!-- 根据状态、类型获取消息列表 -->
+  <select id="findAppListByStatus" resultType="MessageNotify">
+    SELECT
+    <include refid="messageNotifyColumns" />
+    FROM luxclub_message_notify a
+    <include refid="messageNotifyJoins" />
+    WHERE a.state = #{state} and a.message_type=#{type} and a.del_flag =0
+  </select>
+  <!-- 修改消息 -->
+  <update id="updateMessage">
+    UPDATE luxclub_message_notify SET
+    state = #{state},
+    return_code = #{returnCode},
+    error_message = #{errorMsg},
+    send_time = #{sendTime}
+    WHERE id = #{id}
+  </update>
+
+</mapper>

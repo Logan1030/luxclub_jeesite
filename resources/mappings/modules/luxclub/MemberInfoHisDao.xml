@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.footing.website.modules.luxclub.dao.MemberInfoHisDao">
+    
+	<sql id="memberInfoHisColumns">
+		a.id AS "id",
+		a.member_cardno AS "memberCardno",
+		a.member_pwd AS "memberPwd",
+		a.member_level AS "memberLevel",
+		a.member_name AS "memberName",
+		a.member_mobile AS "memberMobile",
+		a.member_balance AS "memberBalance",
+		a.member_amount AS "memberAmount",
+		a.state AS "state",
+        a.batch_id AS "batchId",
+		a.issuing_date AS "issuingDate",
+		a.expire_date AS "expireDate",
+		a.device_id AS "deviceId",
+		a.operation_type AS "operationType",
+		a.operation_date AS "operationDate",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+        a.wallet_balance AS "walletBalance",
+        a.wallet_amount AS "walletAmount",
+        a.wallet_profit AS "walletProfit",
+        a.wallet_last_profit AS "walletLastProfit"
+	</sql>
+	
+	<sql id="memberInfoHisJoins">
+	</sql>
+    
+	<select id="get" resultType="MemberInfoHis">
+		SELECT 
+			<include refid="memberInfoHisColumns"/>
+		FROM luxclub_member_info_his a
+		<include refid="memberInfoHisJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="MemberInfoHis">
+		SELECT 
+			<include refid="memberInfoHisColumns"/>
+		FROM luxclub_member_info_his a
+		<include refid="memberInfoHisJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+            <if test="beginOperationDate != null and beginOperationDate != ''">
+              <![CDATA[AND a.operation_date >= #{beginOperationDate}]]>
+            </if>
+            <if test="endOperationDate != null and endOperationDate != ''">
+              <![CDATA[AND a.operation_date <= #{endOperationDate}]]>
+            </if>
+			<if test="memberCardno != null and memberCardno != ''">
+				AND a.member_cardno like CONCAT('%', #{memberCardno}, '%')
+			</if>
+			<if test="memberLevel != null">
+				AND a.member_level = #{memberLevel}
+			</if>
+			<if test="memberName != null and memberName != ''">
+                AND a.member_name like CONCAT('%', #{memberName}, '%')
+			</if>
+			<if test="memberMobile != null and memberMobile != ''">
+                AND a.member_mobile like CONCAT('%', #{memberMobile}, '%')
+			</if>
+			<if test="memberBalance != null and memberBalance != ''">
+				AND a.member_balance = #{memberBalance}
+			</if>
+			<if test="state != null">
+				AND a.state = #{state}
+			</if>
+			<if test="operationType != null">
+				AND a.operation_type = #{operationType}
+			</if>
+			<if test="deviceId != null and deviceId != ''">
+				AND a.device_id = #{deviceId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.operation_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="MemberInfoHis">
+		SELECT 
+			<include refid="memberInfoHisColumns"/>
+		FROM luxclub_member_info_his a
+		<include refid="memberInfoHisJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO luxclub_member_info_his(
+			member_cardno,
+			member_pwd,
+			member_level,
+			member_name,
+			member_mobile,
+			member_balance,
+			member_amount,
+			state,
+            batch_id,
+			issuing_date,
+			expire_date,
+			device_id,
+			operation_type,
+            operation_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+            wallet_balance,
+            wallet_amount,
+            wallet_profit,
+            wallet_last_profit,
+            term_type
+		) VALUES (
+			#{memberCardno},
+			#{memberPwd},
+			#{memberLevel},
+			#{memberName},
+			#{memberMobile},
+			#{memberBalance},
+			#{memberAmount},
+			#{state},
+			#{batchId},
+			#{issuingDate},
+			#{expireDate},
+			#{deviceId},
+			#{operationType},
+			#{operationDate},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+            #{walletBalance},
+            #{walletAmount},
+            #{walletProfit},
+            #{walletLastProfit},
+            #{termType}
+		)
+	</insert>
+	
+</mapper>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.footing.website.modules.luxclub.dao.CustomerClientTokenDao">
+    
+	<sql id="customerClientTokenColumns">
+		a.account AS "account",
+		a.token AS "token",
+		a.term_type AS "termType",
+		a.last_date AS "lastDate"
+	</sql>
+	
+	<sql id="customerClientTokenJoins">
+	</sql>
+    
+	<select id="get" resultType="CustomerClientToken">
+		SELECT 
+			<include refid="customerClientTokenColumns"/>
+		FROM customer_client_token a
+		<include refid="customerClientTokenJoins"/>
+		WHERE a.account = #{account}
+	</select>
+	
+	<select id="getClientTokenByAccountAndTermType" resultType="CustomerClientToken">
+		SELECT 
+			<include refid="customerClientTokenColumns"/>
+		FROM customer_client_token a
+		<include refid="customerClientTokenJoins"/>
+		WHERE a.account = #{account}
+		AND a.term_type = #{termType}
+	</select>
+
+	<select id="getCustomerClientTokenList" resultType="CustomerClientToken">
+		SELECT 
+			<include refid="customerClientTokenColumns"/>
+		FROM customer_client_token a
+		<include refid="customerClientTokenJoins"/>
+		WHERE a.account = #{account}
+	</select>
+	
+	<select id="getByTokenAndTheDate" resultType="CustomerClientToken">
+		SELECT 
+			<include refid="customerClientTokenColumns"/>
+		FROM customer_client_token a
+		<include refid="customerClientTokenJoins"/>
+		WHERE a.token = #{token}
+		AND a.last_date <![CDATA[ >= #{theDate} ]]>
+	</select>
+	
+	<select id="getByToken" resultType="CustomerClientToken">
+		SELECT 
+			<include refid="customerClientTokenColumns"/>
+		FROM customer_client_token a
+		<include refid="customerClientTokenJoins"/>
+		WHERE a.token = #{token}
+	</select>
+	
+	<select id="findList" resultType="CustomerClientToken">
+		SELECT 
+			<include refid="customerClientTokenColumns"/>
+		FROM customer_client_token a
+		<include refid="customerClientTokenJoins"/>
+		<where>
+			
+			<if test="account != null and account != ''">
+				AND a.account = #{account}
+			</if>
+			<if test="lastDate != null and lastDate != ''">
+				AND a.last_date = #{lastDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="CustomerClientToken">
+		SELECT 
+			<include refid="customerClientTokenColumns"/>
+		FROM customer_client_token a
+		<include refid="customerClientTokenJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO customer_client_token(
+			account,
+			token,
+			term_type,
+			last_date
+		) VALUES (
+			#{account},
+			#{token},
+			#{termType},
+			#{lastDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE customer_client_token SET 
+		  <if test="lastDate != null">
+              last_date = #{lastDate},
+          </if>
+          <if test="token != null">
+              token = #{token}
+          </if>		
+		WHERE account = #{account}
+		AND term_type = #{termType}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM customer_client_token
+		WHERE account = #{account}
+		AND term_type = #{termType}
+	</update>
+	
+</mapper>

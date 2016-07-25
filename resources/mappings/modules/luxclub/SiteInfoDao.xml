@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.footing.website.modules.luxclub.dao.SiteInfoDao">
+    
+	<sql id="siteInfoColumns">
+		a.id AS "id",
+		a.contact_man AS "contactMan",
+		a.contact_phone AS "contactPhone",
+		a.email AS "email",
+		a.site_type AS "siteType",
+		a.site_name AS "siteName",
+		a.site_addr AS "siteAddr",
+		a.site_description AS "siteDescription",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.site_area_id AS "siteAreaId",
+		a.active_info AS "activeInfo",
+		a.shop_album AS "shopAlbum",
+		a.shop_photo AS "shopPhoto",
+		a.code as "code",
+		a.is_open as "isOpen",
+		a.sort as sort
+	</sql>
+	
+	<sql id="siteInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="SiteInfo">
+		SELECT 
+			<include refid="siteInfoColumns"/>
+		FROM luxclub_site_info a
+		<include refid="siteInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="SiteInfo">
+		SELECT 
+			<include refid="siteInfoColumns"/>
+		FROM luxclub_site_info a
+		<include refid="siteInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="contactMan != null and contactMan != ''">
+				AND a.contact_man LIKE 
+					<if test="dbName == 'oracle'">'%'||#{contactMan}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{contactMan}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{contactMan},'%')</if>
+			</if>
+			<if test="contactPhone != null and contactPhone != ''">
+				AND a.contact_phone LIKE 
+					<if test="dbName == 'oracle'">'%'||#{contactPhone}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{contactPhone}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{contactPhone},'%')</if>
+			</if>
+			<if test="email != null and email != ''">
+				AND a.email LIKE 
+					<if test="dbName == 'oracle'">'%'||#{email}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{email}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{email},'%')</if>
+			</if>
+			<if test="siteType != null and siteType != ''">
+				AND a.site_type = #{siteType}
+			</if>
+			<if test="siteName != null and siteName != ''">
+				AND a.site_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{siteName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{siteName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{siteName},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.site_type desc, a.sort asc
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="SiteInfo">
+		SELECT 
+			<include refid="siteInfoColumns"/>
+		FROM luxclub_site_info a
+		<include refid="siteInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO luxclub_site_info(
+			contact_man,
+			contact_phone,
+			email,
+			site_type,
+			site_name,
+			site_addr,
+			site_description,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			site_area_id,
+			active_info,
+			shop_album,
+			shop_photo,
+			code,
+			is_open,
+			sort
+		) VALUES (
+			#{contactMan},
+			#{contactPhone},
+			#{email},
+			#{siteType},
+			#{siteName},
+			#{siteAddr},
+			#{siteDescription},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{siteAreaId},
+			#{activeInfo},
+			#{shopAlbum},
+			#{shopPhoto},
+			#{code},
+			#{isOpen},
+			#{sort}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE luxclub_site_info SET 	
+			contact_man = #{contactMan},
+			contact_phone = #{contactPhone},
+			email = #{email},
+			site_type = #{siteType},
+			site_name = #{siteName},
+			site_addr = #{siteAddr},
+			site_description = #{siteDescription},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			site_area_id = #{siteAreaId},
+			active_info = #{activeInfo},
+			shop_album = #{shopAlbum},
+			shop_photo = #{shopPhoto},
+			code = #{code},
+			is_open = #{isOpen},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE luxclub_site_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+    <select id="querySiteInfoByType" resultType="com.footing.website.modules.luxclub.api.response.SiteInfoVo">
+		SELECT 
+			a.id AS "siteId",
+			a.site_type AS "siteType",
+			a.site_name AS "siteName",
+			a.site_addr as siteAddr
+		FROM luxclub_site_info a
+		where a.site_type=#{siteType} and a.del_flag=0
+		ORDER BY a.sort asc
+	</select>
+	<select id="searchListBySiteName" resultType="com.footing.website.modules.luxclub.api.response.SiteInfoVo">
+		select 
+		 a.id AS "siteId",
+		 a.site_type AS "siteType",
+		 a.site_name AS "siteName",
+		 a.shop_photo as siteImageUrl,
+		 b.`name` as areaName,
+		 a.site_addr as siteAddr
+		 from luxclub_site_info a left join
+		sys_area b on a.site_area_id=b.id
+		<where>
+		  a.del_flag=0
+		  <if test="siteType != null and siteType != ''">
+				AND a.site_type = #{siteType}
+		  </if>
+		  <if test="siteName != null and siteName != ''">
+				and a.site_name like concat('%',#{siteName},'%') 
+		  </if>
+		</where>
+		ORDER BY a.sort asc
+	</select>
+	<select id="siteInfoDetails" resultType="com.footing.website.modules.luxclub.api.response.SiteInfoVo">
+		select 
+		 a.id AS "siteId",
+		 a.site_type AS "siteType",
+		 a.site_name AS "siteName",
+		 a.shop_photo as siteImageUrl,
+		 b.`name` as areaName,
+		 a.site_addr as siteAddr,
+		 a.contact_man as  contacter,
+		 a.contact_phone as contactPhone,
+		 a.site_description as siteDescription,
+		 a.active_info as activeInfo,
+		 a.shop_album as shopAlbum,
+		 a.is_open as "isOpen"
+		 from luxclub_site_info a left join
+		sys_area b on a.site_area_id=b.id
+		where a.id=#{id}
+		and a.del_flag=0
+	</select>
+	<select id="siteInfoPageList" resultType="com.footing.website.modules.luxclub.api.response.SiteInfoVo">
+	    select 
+		 a.id AS "siteId",
+		 a.site_name AS "siteName",
+		 a.shop_photo as siteImageUrl,
+		 a.site_addr as siteAddr
+		 from luxclub_site_info a 
+		 <where>
+		  a.del_flag=0
+		  <if test="siteType != null and siteType != ''">
+				AND a.site_type = #{siteType}
+		  </if>
+		  <if test="areaId != null and areaId != '' and areaId != -1 ">
+				and a.site_area_id =#{areaId}
+		  </if>
+		</where>
+		 ORDER BY a.sort asc
+		 limit #{pageSize},#{pageNumber}
+	</select>
+	<select id="countBySiteType" resultType="java.lang.Integer">
+	       select count(*)  from luxclub_site_info a 
+	       where a.del_flag=0
+	       AND a.site_type = #{siteType}
+	</select>
+	<!-- 置顶之后，批量更新语句 -->
+	<update id="batchUpdateSite"  parameterType="java.util.List">
+          <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+                update luxclub_site_info 
+                <set>
+                  sort=${item.sort}+1
+                </set>
+                where id = ${item.id}
+         </foreach>
+    </update>
+    <select id="findUpdateSite" resultType="SiteInfo">
+		SELECT 
+			<include refid="siteInfoColumns"/>
+		FROM luxclub_site_info a
+		where a.del_flag=0
+		AND a.site_type = #{siteType}
+		AND a.sort &lt; #{sort}  	
+	</select>
+</mapper>
